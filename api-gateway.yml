@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: ApiGateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service
+          uri: lb://CUSTOMERDETAILS
+          predicates:
+            - Path=/customer/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                methods: get
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+
+            - name: CircuitBreaker
+              args:
+                name: CircuitBreakerforServices
+                fallbackUri: forward:/fallback/customer
+
+
+
+        - id: vehicle-service
+          uri: lb://VEHICLESERVICE
+          predicates:
+            - Path=/vehicle/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: CircuitBreakerforServices
+                fallbackUri: forward:/fallback/vehicle
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      CircuitBreakerforServices:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+  retry:
+    instances:
+      ServiceRetry:
+        maxAttempts: 3
+        waitDuration: 2s
+
+
+  timelimiter:
+   instances:
+    CircuitBreakerforServices:
+      timeoutDuration: 10s
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+
+
