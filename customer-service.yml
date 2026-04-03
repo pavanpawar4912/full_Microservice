@@ -1,0 +1,37 @@
+resilience4j:
+  circuitbreaker:
+    instances:
+      CircuitBreakerforServices:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+
+  ratelimiter:
+    instances:
+      customer-rate-limiter:
+        limit-for-period: 3
+        limit-refresh-period: 50s
+        timeout-duration: 0s
+
+
+  retry:
+    instances:
+      customerServiceRetry:
+        maxAttempts : 3
+        waitDuration: 2s
+
+  timelimiter:
+    instances:
+      CircuitBreakerforServices:
+        timeoutDuration: 10s
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
